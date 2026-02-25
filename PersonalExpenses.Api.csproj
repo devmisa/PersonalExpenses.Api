@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="PersonalExpenses.Application.UnitTests\**" />
+    <Compile Remove="PersonalExpenses.Application\**" />
+    <Compile Remove="PersonalExpenses.Domain\**" />
+    <Compile Remove="PersonalExpenses.Infrastructure.UnitTests\**" />
+    <Compile Remove="PersonalExpenses.Infrastructure\**" />
+    <Compile Remove="PersonalExpenses.UnitTests\**" />
+    <Content Remove="PersonalExpenses.Application.UnitTests\**" />
+    <Content Remove="PersonalExpenses.Application\**" />
+    <Content Remove="PersonalExpenses.Domain\**" />
+    <Content Remove="PersonalExpenses.Infrastructure.UnitTests\**" />
+    <Content Remove="PersonalExpenses.Infrastructure\**" />
+    <Content Remove="PersonalExpenses.UnitTests\**" />
+    <EmbeddedResource Remove="PersonalExpenses.Application.UnitTests\**" />
+    <EmbeddedResource Remove="PersonalExpenses.Application\**" />
+    <EmbeddedResource Remove="PersonalExpenses.Domain\**" />
+    <EmbeddedResource Remove="PersonalExpenses.Infrastructure.UnitTests\**" />
+    <EmbeddedResource Remove="PersonalExpenses.Infrastructure\**" />
+    <EmbeddedResource Remove="PersonalExpenses.UnitTests\**" />
+    <None Remove="PersonalExpenses.Application.UnitTests\**" />
+    <None Remove="PersonalExpenses.Application\**" />
+    <None Remove="PersonalExpenses.Domain\**" />
+    <None Remove="PersonalExpenses.Infrastructure.UnitTests\**" />
+    <None Remove="PersonalExpenses.Infrastructure\**" />
+    <None Remove="PersonalExpenses.UnitTests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="PersonalExpenses.Application\PersonalExpenses.Application.csproj" />
+    <ProjectReference Include="PersonalExpenses.Infrastructure\PersonalExpenses.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
