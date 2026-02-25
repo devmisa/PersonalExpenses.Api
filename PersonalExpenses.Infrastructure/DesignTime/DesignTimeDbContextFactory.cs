@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using PersonalExpenses.Infrastructure.Data;
-
+using PersonalExpenses.Infrastructure.Extensions;
 
 namespace PersonalExpenses.Infrastructure.DesignTime
 {
@@ -19,7 +19,7 @@ namespace PersonalExpenses.Infrastructure.DesignTime
             string? connectionString = configuration.GetConnectionString("DefaultConnection");
 
             DbContextOptionsBuilder<AppDbContext> optionsBuilder = new();
-            _ = optionsBuilder.UseSqlite(connectionString);
+            optionsBuilder.ConfigureSqliteOptions(connectionString);
 
             return new AppDbContext(optionsBuilder.Options);
         }

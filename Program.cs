@@ -8,6 +8,7 @@ using PersonalExpenses.Application.Interfaces;
 using PersonalExpenses.Application.Services;
 using PersonalExpenses.Application.Validations;
 using PersonalExpenses.Infrastructure.Data;
+using PersonalExpenses.Infrastructure.Extensions;
 using PersonalExpenses.Infrastructure.Interfaces;
 using PersonalExpenses.Infrastructure.Repositories;
 
@@ -24,7 +25,7 @@ Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
 
 //Configure Database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(connectionString));
+    options.ConfigureSqliteOptions(connectionString));
 
 builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
 builder.Services.AddScoped<IExpenseService, ExpenseService>();
