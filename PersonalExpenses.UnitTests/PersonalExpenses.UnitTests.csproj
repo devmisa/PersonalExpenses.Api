@@ -32,8 +32,4 @@
     <ProjectReference Include="..\PersonalExpenses.Domain\PersonalExpenses.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Middlewares\" />
-  </ItemGroup>
-
 </Project>

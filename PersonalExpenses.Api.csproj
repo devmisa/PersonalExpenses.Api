@@ -8,29 +8,37 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="PersonalExpenses.Api\**" />
     <Compile Remove="PersonalExpenses.Application.UnitTests\**" />
     <Compile Remove="PersonalExpenses.Application\**" />
     <Compile Remove="PersonalExpenses.Domain\**" />
     <Compile Remove="PersonalExpenses.Infrastructure.UnitTests\**" />
     <Compile Remove="PersonalExpenses.Infrastructure\**" />
+    <Compile Remove="PersonalExpenses.Security\**" />
     <Compile Remove="PersonalExpenses.UnitTests\**" />
+    <Content Remove="PersonalExpenses.Api\**" />
     <Content Remove="PersonalExpenses.Application.UnitTests\**" />
     <Content Remove="PersonalExpenses.Application\**" />
     <Content Remove="PersonalExpenses.Domain\**" />
     <Content Remove="PersonalExpenses.Infrastructure.UnitTests\**" />
     <Content Remove="PersonalExpenses.Infrastructure\**" />
+    <Content Remove="PersonalExpenses.Security\**" />
     <Content Remove="PersonalExpenses.UnitTests\**" />
+    <EmbeddedResource Remove="PersonalExpenses.Api\**" />
     <EmbeddedResource Remove="PersonalExpenses.Application.UnitTests\**" />
     <EmbeddedResource Remove="PersonalExpenses.Application\**" />
     <EmbeddedResource Remove="PersonalExpenses.Domain\**" />
     <EmbeddedResource Remove="PersonalExpenses.Infrastructure.UnitTests\**" />
     <EmbeddedResource Remove="PersonalExpenses.Infrastructure\**" />
+    <EmbeddedResource Remove="PersonalExpenses.Security\**" />
     <EmbeddedResource Remove="PersonalExpenses.UnitTests\**" />
+    <None Remove="PersonalExpenses.Api\**" />
     <None Remove="PersonalExpenses.Application.UnitTests\**" />
     <None Remove="PersonalExpenses.Application\**" />
     <None Remove="PersonalExpenses.Domain\**" />
     <None Remove="PersonalExpenses.Infrastructure.UnitTests\**" />
     <None Remove="PersonalExpenses.Infrastructure\**" />
+    <None Remove="PersonalExpenses.Security\**" />
     <None Remove="PersonalExpenses.UnitTests\**" />
   </ItemGroup>
 
@@ -42,11 +50,13 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.4" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.16.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="PersonalExpenses.Application\PersonalExpenses.Application.csproj" />
     <ProjectReference Include="PersonalExpenses.Infrastructure\PersonalExpenses.Infrastructure.csproj" />
+    <ProjectReference Include="PersonalExpenses.Security\PersonalExpenses.Security.csproj" />
   </ItemGroup>
 
 </Project>

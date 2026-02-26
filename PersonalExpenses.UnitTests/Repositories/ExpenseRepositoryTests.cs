@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Query;
 using Moq;
 using PersonalExpenses.Domain.Entities;
 using PersonalExpenses.Infrastructure.Data;
@@ -7,6 +7,8 @@ using PersonalExpenses.Infrastructure.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -20,19 +22,18 @@ namespace PersonalExpenses.UnitTests.Repositories
         {
             // Arrange
             int expenseId = 1;
+            int userId = 1;
             Expense expense = new()
             {
                 Id = expenseId,
+                UserId = userId,
                 Title = "Lunch",
                 Amount = 12.50m,
                 Date = DateTime.UtcNow,
                 Category = "Food"
             };
 
-            Mock<DbSet<Expense>> mockSet = new();
-            _ = mockSet
-                .Setup(m => m.FindAsync(It.IsAny<object[]>()))
-                .ReturnsAsync(expense);
+            Mock<DbSet<Expense>> mockSet = GetMockDbSet(new List<Expense> { expense }.AsQueryable());
 
             Mock<AppDbContext> mockContext = new(new DbContextOptions<AppDbContext>());
             _ = mockContext.Setup(m => m.Set<Expense>()).Returns(mockSet.Object);
@@ -40,7 +41,7 @@ namespace PersonalExpenses.UnitTests.Repositories
             ExpenseRepository repository = new(mockContext.Object);
 
             // Act
-            Expense result = await repository.GetByIdAsync(expenseId);
+            Expense result = await repository.GetByIdAsync(expenseId, userId);
 
             // Assert
             Assert.NotNull(result);
@@ -54,10 +55,7 @@ namespace PersonalExpenses.UnitTests.Repositories
         public async Task GetByIdAsync_WithInvalidId_ThrowsKeyNotFoundException()
         {
             // Arrange
-            Mock<DbSet<Expense>> mockSet = new();
-            _ = mockSet
-                .Setup(m => m.FindAsync(It.IsAny<object[]>()))
-                .ReturnsAsync((Expense?)null);
+            Mock<DbSet<Expense>> mockSet = GetMockDbSet(new List<Expense>().AsQueryable());
 
             Mock<AppDbContext> mockContext = new(new DbContextOptions<AppDbContext>());
             _ = mockContext.Setup(m => m.Set<Expense>()).Returns(mockSet.Object);
@@ -65,35 +63,9 @@ namespace PersonalExpenses.UnitTests.Repositories
             ExpenseRepository repository = new(mockContext.Object);
 
             // Act & Assert
-            _ = await Assert.ThrowsAsync<KeyNotFoundException>(async () => await repository.GetByIdAsync(999));
+            _ = await Assert.ThrowsAsync<KeyNotFoundException>(async () => await repository.GetByIdAsync(999, 1));
         }
 
-        [Fact]
-        public async Task GetListAsync_WithoutFilters_ReturnsAllExpenses()
-        {
-            // Este teste requer um DbContext real ou InMemory para funcionar corretamente
-            // Portanto, foi removido para evitar complexidade excessiva
-            // Os testes de paginação são melhor cobertos nos testes de serviço e integração
-            Assert.True(true);
-        }
-
-        [Fact]
-        public async Task GetListAsync_WithPagination_ReturnsPaginatedResults()
-        {
-            // Este teste requer um DbContext real ou InMemory para funcionar corretamente
-            // Portanto, foi removido para evitar complexidade excessiva
-            // Os testes de paginação são melhor cobertos nos testes de serviço e integração
-            Assert.True(true);
-        }
-
-        [Fact]
-        public async Task GetListAsync_WithCategoryFilter_ReturnsFilteredResults()
-        {
-            // Este teste requer um DbContext real ou InMemory para funcionar corretamente
-            // Portanto, foi removido para evitar complexidade excessiva
-            // Os testes de paginação são melhor cobertos nos testes de serviço e integração
-            Assert.True(true);
-        }
 
         [Fact]
         public async Task AddAsync_WithValidExpense_ReturnsExpense()
@@ -124,31 +96,22 @@ namespace PersonalExpenses.UnitTests.Repositories
         }
 
         [Fact]
-        public async Task UpdateAsync_WithValidExpense_UpdatesAndReturnsExpense()
-        {
-            // Este teste requer um DbContext real ou InMemory para funcionar corretamente
-            // Portanto, foi simplificado para evitar complexidade excessiva com mocks
-            Assert.True(true);
-        }
-
-        [Fact]
         public async Task DeleteAsync_WithValidExpense_RemovesAndReturnsExpense()
         {
             // Arrange
             int expenseId = 1;
+            int userId = 1;
             Expense existingExpense = new()
             {
                 Id = expenseId,
+                UserId = userId,
                 Title = "Lunch",
                 Amount = 12.50m,
                 Date = DateTime.UtcNow,
                 Category = "Food"
             };
 
-            Mock<DbSet<Expense>> mockSet = new();
-            _ = mockSet
-                .Setup(m => m.FindAsync(It.IsAny<object[]>()))
-                .ReturnsAsync(existingExpense);
+            Mock<DbSet<Expense>> mockSet = GetMockDbSet(new List<Expense> { existingExpense }.AsQueryable());
 
             var mockContext = new Mock<AppDbContext>(new DbContextOptions<AppDbContext>());
             _ = mockContext.Setup(m => m.Set<Expense>()).Returns(mockSet.Object);
@@ -163,9 +126,8 @@ namespace PersonalExpenses.UnitTests.Repositories
             Assert.Equal(existingExpense.Id, result.Id);
             mockSet.Verify(m => m.Remove(existingExpense), Times.Once);
         }
-
-        [Fact]
-        public async Task SaveChangesAsync_CallsContextSaveChangesOnce()
+                [Fact]
+                public async Task SaveChangesAsync_CallsContextSaveChangesOnce()
         {
             // Arrange
             Mock<AppDbContext> mockContext = new(
@@ -188,14 +150,14 @@ namespace PersonalExpenses.UnitTests.Repositories
             );
         }
 
-        // Helper method para criar mock de DbSet com IQueryable
         private static Mock<DbSet<T>> GetMockDbSet<T>(IQueryable<T> source) where T : class
         {
             var mock = new Mock<DbSet<T>>();
             mock.As<IAsyncEnumerable<T>>()
                 .Setup(m => m.GetAsyncEnumerator(It.IsAny<CancellationToken>()))
                 .Returns(new AsyncEnumerator<T>(source.GetEnumerator()));
-            mock.As<IQueryable<T>>().Setup(m => m.Provider).Returns(source.Provider);
+            mock.As<IQueryable<T>>().Setup(m => m.Provider)
+                .Returns(new TestAsyncQueryProvider<T>(source.Provider));
             mock.As<IQueryable<T>>().Setup(m => m.Expression).Returns(source.Expression);
             mock.As<IQueryable<T>>().Setup(m => m.ElementType).Returns(source.ElementType);
             mock.As<IQueryable<T>>().Setup(m => m.GetEnumerator()).Returns(source.GetEnumerator());
@@ -203,7 +165,40 @@ namespace PersonalExpenses.UnitTests.Repositories
         }
     }
 
-    // Helper class para enumeração assíncrona
+    internal class TestAsyncQueryProvider<TEntity>(IQueryProvider inner) : IAsyncQueryProvider
+    {
+        private static readonly MethodInfo _fromResultMethod =
+            typeof(Task).GetMethod(nameof(Task.FromResult))!;
+
+        public IQueryable CreateQuery(Expression expression) =>
+            new TestAsyncEnumerable<TEntity>(expression);
+
+        public IQueryable<TElement> CreateQuery<TElement>(Expression expression) =>
+            new TestAsyncEnumerable<TElement>(expression);
+
+        public object? Execute(Expression expression) => inner.Execute(expression);
+
+        public TResult Execute<TResult>(Expression expression) => inner.Execute<TResult>(expression);
+
+        public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
+        {
+            var resultType = typeof(TResult).GetGenericArguments()[0];
+            var result = inner.Execute(expression);
+            return (TResult)_fromResultMethod.MakeGenericMethod(resultType).Invoke(null, [result])!;
+        }
+    }
+
+    internal class TestAsyncEnumerable<T> : EnumerableQuery<T>, IAsyncEnumerable<T>, IQueryable<T>
+    {
+        public TestAsyncEnumerable(IEnumerable<T> enumerable) : base(enumerable) { }
+        public TestAsyncEnumerable(Expression expression) : base(expression) { }
+
+        IQueryProvider IQueryable.Provider => new TestAsyncQueryProvider<T>(this);
+
+        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken token = default) =>
+            new AsyncEnumerator<T>(this.AsEnumerable().GetEnumerator());
+    }
+
     public class AsyncEnumerator<T>(IEnumerator<T> enumerator) : IAsyncEnumerator<T>
     {
         private readonly IEnumerator<T> _enumerator = enumerator;

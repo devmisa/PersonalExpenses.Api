@@ -11,18 +11,18 @@ namespace PersonalExpenses.Application.Services
 {
     public class ExpenseService(IExpenseRepository expenseRepository) : IExpenseService
     {
-        public async Task<ExpenseResponse> GetByIdAsync(int id)
+        public async Task<ExpenseResponse> GetByIdAsync(int id, int userId)
         {
-            Expense entity = await expenseRepository.GetByIdAsync(id);
+            Expense entity = await expenseRepository.GetByIdAsync(id, userId);
 
             return entity.ToResponse();
         }
 
-        public async Task<PaginatedResponse<ExpenseResponse>> GetAllAsync(GetExpensesQueryParams queryParams)
+        public async Task<PaginatedResponse<ExpenseResponse>> GetAllAsync(GetExpensesQueryParams queryParams, int userId)
         {
             queryParams.Validate();
 
-            var (items, totalCount) = await expenseRepository.GetListAsync(queryParams.Page, queryParams.PageSize, queryParams.Category);
+            var (items, totalCount) = await expenseRepository.GetListAsync(queryParams.Page, queryParams.PageSize, queryParams.Category, userId);
 
             return new PaginatedResponse<ExpenseResponse>
             {
@@ -49,7 +49,7 @@ namespace PersonalExpenses.Application.Services
             return createdEntity.ToResponse();
         }
 
-        public async Task<ExpenseResponse> UpdateAsync(int id, UpdateExpenseRequest request)
+        public async Task<ExpenseResponse> UpdateAsync(int id, UpdateExpenseRequest request, int userId)
         {
             ExpenseRequestValidator<UpdateExpenseRequest> validator = new();
 
@@ -58,7 +58,7 @@ namespace PersonalExpenses.Application.Services
             if (!validationResult.IsValid)
                 throw new ValidationException(validationResult.Errors);
 
-            Expense entity = await expenseRepository.GetByIdAsync(id) ?? throw new KeyNotFoundException($"Expense with id {id} not found.");
+            Expense entity = await expenseRepository.GetByIdAsync(id, userId) ?? throw new KeyNotFoundException($"Expense with id {id} not found.");
             request.UpdateEntity(entity);
 
             var updatedEntity = await expenseRepository.UpdateAsync(entity);  
@@ -67,9 +67,9 @@ namespace PersonalExpenses.Application.Services
             return updatedEntity.ToResponse();  
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id, int userId)
         {
-            Expense entity = await expenseRepository.GetByIdAsync(id);
+            Expense entity = await expenseRepository.GetByIdAsync(id, userId);
 
             if (entity == null)
                 return false;

@@ -2,5 +2,6 @@
 {
     public record CreateExpenseRequest : ExpenseRequestBase
     {
+        public int UserId { get; init; }
     }
 }

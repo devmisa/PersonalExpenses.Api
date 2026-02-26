@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using PersonalExpenses.Api.Controllers;
@@ -5,6 +6,7 @@ using PersonalExpenses.Application.Dtos;
 using PersonalExpenses.Application.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -12,6 +14,18 @@ namespace PersonalExpenses.UnitTests.Controllers
 {
     public class ExpensesControllerTests
     {
+        private static ExpensesController CreateController(Mock<IExpenseService> mockService, int userId = 1)
+        {
+            var controller = new ExpensesController(mockService.Object);
+            var user = new ClaimsPrincipal(new ClaimsIdentity(
+                [new Claim(ClaimTypes.NameIdentifier, userId.ToString())], "TestAuth"));
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+            return controller;
+        }
+
         [Fact]
         public async Task GetAll_ReturnsOkWithPaginatedExpenses()
         {
@@ -32,9 +46,9 @@ namespace PersonalExpenses.UnitTests.Controllers
             };
 
             Mock<IExpenseService> mockService = new(MockBehavior.Strict);
-            _ = mockService.Setup(s => s.GetAllAsync(It.IsAny<GetExpensesQueryParams>())).ReturnsAsync(paginatedResponse);
+            _ = mockService.Setup(s => s.GetAllAsync(It.IsAny<GetExpensesQueryParams>(), It.IsAny<int>())).ReturnsAsync(paginatedResponse);
 
-            ExpensesController controller = new(mockService.Object);
+            ExpensesController controller = CreateController(mockService);
 
             // Act
             GetExpensesQueryParams queryParams = new() { Page = 1, PageSize = 20 };
@@ -45,7 +59,7 @@ namespace PersonalExpenses.UnitTests.Controllers
             PaginatedResponse<ExpenseResponse> returnedResponse = Assert.IsType<PaginatedResponse<ExpenseResponse>>(okResult.Value);
             Assert.Equal(2, returnedResponse.Data.Count);
             Assert.Equal(1, returnedResponse.Page);
-            mockService.Verify(s => s.GetAllAsync(It.IsAny<GetExpensesQueryParams>()), Times.Once());
+            mockService.Verify(s => s.GetAllAsync(It.IsAny<GetExpensesQueryParams>(), It.IsAny<int>()), Times.Once());
         }
 
         [Fact]
@@ -64,9 +78,9 @@ namespace PersonalExpenses.UnitTests.Controllers
             };
 
             Mock<IExpenseService> mockService = new(MockBehavior.Strict);
-            _ = mockService.Setup(s => s.GetByIdAsync(expenseId)).ReturnsAsync(expense);
+            _ = mockService.Setup(s => s.GetByIdAsync(expenseId, It.IsAny<int>())).ReturnsAsync(expense);
 
-            ExpensesController controller = new(mockService.Object);
+            ExpensesController controller = CreateController(mockService);
 
             // Act
             IActionResult result = await controller.GetById(expenseId);
@@ -76,7 +90,7 @@ namespace PersonalExpenses.UnitTests.Controllers
             ExpenseResponse returnedExpense = Assert.IsType<ExpenseResponse>(okResult.Value);
             Assert.Equal(expense.Id, returnedExpense.Id);
             Assert.Equal(expense.Title, returnedExpense.Title);
-            mockService.Verify(s => s.GetByIdAsync(expenseId), Times.Once());
+            mockService.Verify(s => s.GetByIdAsync(expenseId, It.IsAny<int>()), Times.Once());
         }
 
         [Fact]
@@ -84,16 +98,16 @@ namespace PersonalExpenses.UnitTests.Controllers
         {
             // Arrange
             Mock<IExpenseService> mockService = new(MockBehavior.Strict);
-            _ = mockService.Setup(s => s.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((ExpenseResponse?)null);
+            _ = mockService.Setup(s => s.GetByIdAsync(It.IsAny<int>(), It.IsAny<int>())).ReturnsAsync((ExpenseResponse?)null);
 
-            ExpensesController controller = new(mockService.Object);
+            ExpensesController controller = CreateController(mockService);
 
             // Act
             IActionResult result = await controller.GetById(999);
 
             // Assert
             _ = Assert.IsType<NotFoundResult>(result);
-            mockService.Verify(s => s.GetByIdAsync(It.IsAny<int>()), Times.Once());
+            mockService.Verify(s => s.GetByIdAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Once());
         }
 
         [Fact]
@@ -121,7 +135,7 @@ namespace PersonalExpenses.UnitTests.Controllers
             Mock<IExpenseService> mockService = new(MockBehavior.Strict);
             _ = mockService.Setup(s => s.CreateAsync(It.IsAny<CreateExpenseRequest>())).ReturnsAsync((ExpenseResponse?)createdExpense);
 
-            ExpensesController controller = new(mockService.Object);
+            ExpensesController controller = CreateController(mockService);
 
             // Act
             IActionResult result = await controller.Create(request);
@@ -157,9 +171,9 @@ namespace PersonalExpenses.UnitTests.Controllers
             };
 
             Mock<IExpenseService> mockService = new(MockBehavior.Strict);
-            _ = mockService.Setup(s => s.UpdateAsync(expenseId, It.IsAny<UpdateExpenseRequest>())).ReturnsAsync((ExpenseResponse?)updatedExpense);
+            _ = mockService.Setup(s => s.UpdateAsync(expenseId, It.IsAny<UpdateExpenseRequest>(), It.IsAny<int>())).ReturnsAsync((ExpenseResponse?)updatedExpense);
 
-            ExpensesController controller = new(mockService.Object);
+            ExpensesController controller = CreateController(mockService);
 
             // Act
             IActionResult result = await controller.Update(expenseId, request);
@@ -168,7 +182,7 @@ namespace PersonalExpenses.UnitTests.Controllers
             OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
             ExpenseResponse returnedExpense = Assert.IsType<ExpenseResponse>(okResult.Value);
             Assert.Equal(request.Title, returnedExpense.Title);
-            mockService.Verify(s => s.UpdateAsync(expenseId, It.IsAny<UpdateExpenseRequest>()), Times.Once());
+            mockService.Verify(s => s.UpdateAsync(expenseId, It.IsAny<UpdateExpenseRequest>(), It.IsAny<int>()), Times.Once());
         }
 
         [Fact]
@@ -185,9 +199,9 @@ namespace PersonalExpenses.UnitTests.Controllers
             };
 
             Mock<IExpenseService> mockService = new(MockBehavior.Strict);
-            _ = mockService.Setup(s => s.UpdateAsync(It.IsAny<int>(), It.IsAny<UpdateExpenseRequest>())).ReturnsAsync((ExpenseResponse?)null);
+            _ = mockService.Setup(s => s.UpdateAsync(It.IsAny<int>(), It.IsAny<UpdateExpenseRequest>(), It.IsAny<int>())).ReturnsAsync((ExpenseResponse?)null);
 
-            ExpensesController controller = new(mockService.Object);
+            ExpensesController controller = CreateController(mockService);
 
             // Act
             IActionResult result = await controller.Update(expenseId, request);
@@ -202,16 +216,16 @@ namespace PersonalExpenses.UnitTests.Controllers
             // Arrange
             int expenseId = 1;
             Mock<IExpenseService> mockService = new(MockBehavior.Strict);
-            _ = mockService.Setup(s => s.DeleteAsync(expenseId)).ReturnsAsync(true);
+            _ = mockService.Setup(s => s.DeleteAsync(expenseId, It.IsAny<int>())).ReturnsAsync(true);
 
-            ExpensesController controller = new(mockService.Object);
+            ExpensesController controller = CreateController(mockService);
 
             // Act
             IActionResult result = await controller.Delete(expenseId);
 
             // Assert
             _ = Assert.IsType<NoContentResult>(result);
-            mockService.Verify(s => s.DeleteAsync(expenseId), Times.Once());
+            mockService.Verify(s => s.DeleteAsync(expenseId, It.IsAny<int>()), Times.Once());
         }
 
         [Fact]
@@ -220,16 +234,16 @@ namespace PersonalExpenses.UnitTests.Controllers
             // Arrange
             int expenseId = 999;
             Mock<IExpenseService> mockService = new(MockBehavior.Strict);
-            _ = mockService.Setup(s => s.DeleteAsync(expenseId)).ReturnsAsync(false);
+            _ = mockService.Setup(s => s.DeleteAsync(expenseId, It.IsAny<int>())).ReturnsAsync(false);
 
-            ExpensesController controller = new(mockService.Object);
+            ExpensesController controller = CreateController(mockService);
 
             // Act
             IActionResult result = await controller.Delete(expenseId);
 
             // Assert
             _ = Assert.IsType<NotFoundResult>(result);
-            mockService.Verify(s => s.DeleteAsync(expenseId), Times.Once());
+            mockService.Verify(s => s.DeleteAsync(expenseId, It.IsAny<int>()), Times.Once());
         }
     }
 }

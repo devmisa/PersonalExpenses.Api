@@ -3,5 +3,6 @@
   <Project Path="PersonalExpenses.Application/PersonalExpenses.Application.csproj" />
   <Project Path="PersonalExpenses.Domain/PersonalExpenses.Domain.csproj" />
   <Project Path="PersonalExpenses.Infrastructure/PersonalExpenses.Infrastructure.csproj" />
+  <Project Path="PersonalExpenses.Security/PersonalExpenses.Security.csproj" Id="13f1432e-bbd0-45d8-94f8-6813cc2364fb" />
   <Project Path="PersonalExpenses.UnitTests/PersonalExpenses.UnitTests.csproj" Id="20845b75-74ea-4c52-8501-6a87aa41b940" />
 </Solution>

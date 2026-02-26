@@ -27,6 +27,17 @@ namespace PersonalExpenses.Infrastructure.Data.Configurations
 
             _ = builder.Property(e => e.Category)
                 .HasMaxLength(100);
+
+            _ = builder.Property(e => e.UserId)
+                .IsRequired();
+
+            _ = builder.HasIndex(e => e.UserId);
+
+            _ = builder.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

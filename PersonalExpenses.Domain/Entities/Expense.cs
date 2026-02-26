@@ -2,6 +2,7 @@
 {
     public class Expense
     {
+        public int UserId { get; set; }
         public int Id { get; set; }
         public required string Title { get; set; }
         public decimal Amount { get; set; }

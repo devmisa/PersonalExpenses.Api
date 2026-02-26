@@ -94,7 +94,7 @@ namespace PersonalExpenses.UnitTests.Mappings
             Assert.Equal(request.Amount, entity.Amount);
             Assert.Equal(request.Date, entity.Date);
             Assert.Equal(request.Category, entity.Category);
-            Assert.Equal(0, entity.Id); // ID should be default (0) for new entity
+            Assert.Equal(0, entity.Id); 
         }
 
         [Fact]
@@ -151,7 +151,7 @@ namespace PersonalExpenses.UnitTests.Mappings
             Assert.Equal(20m, entity.Amount);
             Assert.Equal(now, entity.Date);
             Assert.Equal("NewCategory", entity.Category);
-            Assert.Equal(1, entity.Id); // ID should remain unchanged
+            Assert.Equal(1, entity.Id);
         }
 
         [Fact]

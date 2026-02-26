@@ -19,7 +19,7 @@ namespace PersonalExpenses.Application.Mapppings
 
         public static IList<ExpenseResponse> ToResponseList(this IList<Expense> entities)
         {
-            return entities.Select(e => e.ToResponse()).ToList();
+            return [.. entities.Select(e => e.ToResponse())];
         }
 
         public static Expense ToEntity(this ExpenseRequestBase dto)
@@ -30,6 +30,18 @@ namespace PersonalExpenses.Application.Mapppings
                 Amount = dto.Amount,
                 Date = dto.Date,
                 Category = dto.Category
+            };
+        }
+
+        public static Expense ToEntity(this CreateExpenseRequest dto)
+        {
+            return new Expense
+            {
+                Title = dto.Title,
+                Amount = dto.Amount,
+                Date = dto.Date,
+                Category = dto.Category,
+                UserId = dto.UserId
             };
         }
 

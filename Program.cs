@@ -1,8 +1,13 @@
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
+using Microsoft.IdentityModel.Tokens;
 using PersonalExpenses.Api.Middlewares;
 using PersonalExpenses.Api.Services;
+using PersonalExpenses.Application.Context;
 using PersonalExpenses.Application.Dtos;
 using PersonalExpenses.Application.Interfaces;
 using PersonalExpenses.Application.Services;
@@ -11,15 +16,23 @@ using PersonalExpenses.Infrastructure.Data;
 using PersonalExpenses.Infrastructure.Extensions;
 using PersonalExpenses.Infrastructure.Interfaces;
 using PersonalExpenses.Infrastructure.Repositories;
+using PersonalExpenses.Security.Interfaces;
+using PersonalExpenses.Security.Passwords;
+using PersonalExpenses.Security.Services;
+using PersonalExpenses.Security.Settings;
+using System.Text;
+using System.Threading.RateLimiting;
+using PersonalExpenses.Domain.Interfaces;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
 
 string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var builderConnection = new SqliteConnectionStringBuilder(connectionString);
 string dbPath = builderConnection.DataSource;
 
 string fullPath = Path.Combine(builder.Environment.ContentRootPath, dbPath);
-// Garantir que o diretório existe
 Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
 
 
@@ -27,21 +40,96 @@ Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.ConfigureSqliteOptions(connectionString));
 
+// Add services to the container.
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUserContext, UserContext>();
 builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
 builder.Services.AddScoped<IExpenseService, ExpenseService>();
-
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IValidator<CreateExpenseRequest>, ExpenseRequestValidator<CreateExpenseRequest>>();
 builder.Services.AddScoped<IValidator<UpdateExpenseRequest>, ExpenseRequestValidator<UpdateExpenseRequest>>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
 builder.Services.AddSingleton<ExceptionToProblemDetailsService>();
+builder.Services.AddSingleton(jwtSettings);
 
-// Add services to the container.
+//CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:3000", "https://localhost:3000") // Frontend URLs //TODO: editar
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
+    });
+});
+
+//Configurar Rate Limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("login", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 5;
+        limiterOptions.Window = TimeSpan.FromMinutes(15);
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+    });
+
+    options.AddFixedWindowLimiter("general", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 100;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+    });
+
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
+builder.Services.AddAuthentication(x => {
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(x => {
+    x.RequireHttpsMetadata = true;
+    x.SaveToken = true;
+    x.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings.Secret)),
+        ValidateIssuer = true,
+        ValidIssuer = jwtSettings.Issuer,
+        ValidateAudience = true,
+        ValidAudience = jwtSettings.Audience
+    };
+}); 
+
 builder.Services.AddControllers();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Insira o token JWT"
+    });
+
+    options.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
+    {
+        { new OpenApiSecuritySchemeReference("Bearer", doc), new List<string>() }
+    });
+});
+
 
 WebApplication app = builder.Build();
 
-// Aplicar migrações e criar banco de dados automaticamente
 try
 {
     using IServiceScope scope = app.Services.CreateScope();
@@ -55,6 +143,8 @@ catch (Exception ex)
     throw;
 }
 
+
+
 // Configure the HTTP request pipeline.
 // Registrar middleware de tratamento global de exceções
 _ = app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -66,8 +156,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseRateLimiter();
+app.UseCors("AllowFrontend");
 
+app.UseAuthentication();  
 app.UseAuthorization();
+app.MapControllers();
 
 app.MapControllers();
 

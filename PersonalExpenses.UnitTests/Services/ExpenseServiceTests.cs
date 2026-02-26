@@ -1,7 +1,6 @@
 using FluentValidation;
 using Moq;
 using PersonalExpenses.Application.Dtos;
-using PersonalExpenses.Application.Interfaces;
 using PersonalExpenses.Application.Services;
 using PersonalExpenses.Domain.Entities;
 using PersonalExpenses.Infrastructure.Interfaces;
@@ -38,16 +37,16 @@ namespace PersonalExpenses.UnitTests.Services
                 Category = "Food"
             };
 
-            _mockRepository.Setup(r => r.GetByIdAsync(expenseId)).ReturnsAsync(expense);
+            _mockRepository.Setup(r => r.GetByIdAsync(expenseId, It.IsAny<int>())).ReturnsAsync(expense);
 
             // Act
-            ExpenseResponse result = await _service.GetByIdAsync(expenseId);
+            ExpenseResponse result = await _service.GetByIdAsync(expenseId, 1);
 
             // Assert
             Assert.NotNull(result);
             Assert.Equal(expenseId, result.Id);
             Assert.Equal("Lunch", result.Title);
-            _mockRepository.Verify(r => r.GetByIdAsync(expenseId), Times.Once);
+            _mockRepository.Verify(r => r.GetByIdAsync(expenseId, It.IsAny<int>()), Times.Once);
         }
 
         [Fact]
@@ -55,12 +54,12 @@ namespace PersonalExpenses.UnitTests.Services
         {
             // Arrange
             int expenseId = 999;
-            _mockRepository.Setup(r => r.GetByIdAsync(expenseId))
+            _mockRepository.Setup(r => r.GetByIdAsync(expenseId, It.IsAny<int>()))
                 .ThrowsAsync(new KeyNotFoundException());
 
             // Act & Assert
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await _service.GetByIdAsync(expenseId));
-            _mockRepository.Verify(r => r.GetByIdAsync(expenseId), Times.Once);
+            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await _service.GetByIdAsync(expenseId, 1));
+            _mockRepository.Verify(r => r.GetByIdAsync(expenseId, It.IsAny<int>()), Times.Once);
         }
 
         [Fact]
@@ -76,11 +75,11 @@ namespace PersonalExpenses.UnitTests.Services
 
             GetExpensesQueryParams queryParams = new() { Page = 1, PageSize = 20, Category = null };
 
-            _mockRepository.Setup(r => r.GetListAsync(1, 20, null))
+            _mockRepository.Setup(r => r.GetListAsync(1, 20, null, It.IsAny<int>()))
                 .ReturnsAsync((expenses, 2));
 
             // Act
-            PaginatedResponse<ExpenseResponse> result = await _service.GetAllAsync(queryParams);
+            PaginatedResponse<ExpenseResponse> result = await _service.GetAllAsync(queryParams, 1);
 
             // Assert
             Assert.NotNull(result);
@@ -88,7 +87,7 @@ namespace PersonalExpenses.UnitTests.Services
             Assert.Equal(1, result.Page);
             Assert.Equal(20, result.PageSize);
             Assert.Equal(2, result.TotalCount);
-            _mockRepository.Verify(r => r.GetListAsync(1, 20, null), Times.Once);
+            _mockRepository.Verify(r => r.GetListAsync(1, 20, null, It.IsAny<int>()), Times.Once);
         }
 
         [Fact]
@@ -104,17 +103,17 @@ namespace PersonalExpenses.UnitTests.Services
 
             GetExpensesQueryParams queryParams = new() { Page = 1, PageSize = 20, Category = "Food" };
 
-            _mockRepository.Setup(r => r.GetListAsync(1, 20, "Food"))
+            _mockRepository.Setup(r => r.GetListAsync(1, 20, "Food", It.IsAny<int>()))
                 .ReturnsAsync((expenses, 2));
 
             // Act
-            PaginatedResponse<ExpenseResponse> result = await _service.GetAllAsync(queryParams);
+            PaginatedResponse<ExpenseResponse> result = await _service.GetAllAsync(queryParams, 1);
 
             // Assert
             Assert.NotNull(result);
             Assert.Equal(2, result.Data.Count);
             Assert.Equal("Food", queryParams.Category);
-            _mockRepository.Verify(r => r.GetListAsync(1, 20, "Food"), Times.Once);
+            _mockRepository.Verify(r => r.GetListAsync(1, 20, "Food", It.IsAny<int>()), Times.Once);
         }
 
         [Fact]
@@ -159,8 +158,8 @@ namespace PersonalExpenses.UnitTests.Services
             // Arrange
             CreateExpenseRequest request = new()
             {
-                Title = "", // Invalid: empty title
-                Amount = -10m, // Invalid: negative amount
+                Title = "", 
+                Amount = -10m,
                 Date = DateTime.UtcNow,
                 Category = ""
             };
@@ -201,19 +200,19 @@ namespace PersonalExpenses.UnitTests.Services
                 Category = request.Category
             };
 
-            _mockRepository.Setup(r => r.GetByIdAsync(expenseId)).ReturnsAsync(existingExpense);
+            _mockRepository.Setup(r => r.GetByIdAsync(expenseId, It.IsAny<int>())).ReturnsAsync(existingExpense);
             _mockRepository.Setup(r => r.UpdateAsync(It.IsAny<Expense>())).ReturnsAsync(updatedExpense);
             _mockRepository.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
 
             // Act
-            ExpenseResponse result = await _service.UpdateAsync(expenseId, request);
+            ExpenseResponse result = await _service.UpdateAsync(expenseId, request, 1);
 
             // Assert
             Assert.NotNull(result);
             Assert.Equal(expenseId, result.Id);
             Assert.Equal("Updated Lunch", result.Title);
             Assert.Equal(15m, result.Amount);
-            _mockRepository.Verify(r => r.GetByIdAsync(expenseId), Times.Once);
+            _mockRepository.Verify(r => r.GetByIdAsync(expenseId, It.IsAny<int>()), Times.Once);
             _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Expense>()), Times.Once);
             _mockRepository.Verify(r => r.SaveChangesAsync(), Times.Once);
         }
@@ -232,11 +231,11 @@ namespace PersonalExpenses.UnitTests.Services
                 Category = "Food"
             };
 
-            _mockRepository.Setup(r => r.GetByIdAsync(expenseId))
+            _mockRepository.Setup(r => r.GetByIdAsync(expenseId, It.IsAny<int>()))
                 .ThrowsAsync(new KeyNotFoundException());
 
             // Act & Assert
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await _service.UpdateAsync(expenseId, request));
+            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await _service.UpdateAsync(expenseId, request, 1));
         }
 
         [Fact]
@@ -253,16 +252,16 @@ namespace PersonalExpenses.UnitTests.Services
                 Category = "Food"
             };
 
-            _mockRepository.Setup(r => r.GetByIdAsync(expenseId)).ReturnsAsync(expense);
+            _mockRepository.Setup(r => r.GetByIdAsync(expenseId, It.IsAny<int>())).ReturnsAsync(expense);
             _mockRepository.Setup(r => r.DeleteAsync(expense)).ReturnsAsync(expense);
             _mockRepository.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
 
             // Act
-            bool result = await _service.DeleteAsync(expenseId);
+            bool result = await _service.DeleteAsync(expenseId, 1);
 
             // Assert
             Assert.True(result);
-            _mockRepository.Verify(r => r.GetByIdAsync(expenseId), Times.Once);
+            _mockRepository.Verify(r => r.GetByIdAsync(expenseId, It.IsAny<int>()), Times.Once);
             _mockRepository.Verify(r => r.DeleteAsync(expense), Times.Once);
             _mockRepository.Verify(r => r.SaveChangesAsync(), Times.Once);
         }
@@ -272,11 +271,11 @@ namespace PersonalExpenses.UnitTests.Services
         {
             // Arrange
             int expenseId = 999;
-            _mockRepository.Setup(r => r.GetByIdAsync(expenseId))
+            _mockRepository.Setup(r => r.GetByIdAsync(expenseId, It.IsAny<int>()))
                 .ReturnsAsync((Expense?)null);
 
             // Act
-            bool result = await _service.DeleteAsync(expenseId);
+            bool result = await _service.DeleteAsync(expenseId, 1);
 
             // Assert
             Assert.False(result);
