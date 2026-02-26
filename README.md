@@ -12,3 +12,20 @@
 - ✅ Documentação via Swagger
 - ✅ Injeção de Dependência configurada
 - ✅ Padrão de camadas implementado
+
+--------------------------------------------------
+
+# Personal Expense Management Application
+
+- ✅ SQLite database configuration
+- ✅ Automatic migrations
+- ✅ Full CRUD with validations
+- ✅ Pagination with category filtering
+- ✅ Global Exception Handler (Middleware + ProblemDetails)
+- ✅ Centralized logging
+- ✅ Transaction handling
+- ✅ Entity → DTO mapping
+- ✅ Unit tests
+- ✅ Swagger Documentation
+- ✅ Configured Dependency Injection
+- ✅ Layered architecture pattern implemented
