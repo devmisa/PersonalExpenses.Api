@@ -37,7 +37,7 @@ namespace PersonalExpenses.UnitTests.Services
                 Category = "Food"
             };
 
-            _mockRepository.Setup(r => r.GetByIdAsync(expenseId, It.IsAny<int>())).ReturnsAsync(expense);
+            _ = _mockRepository.Setup(r => r.GetByIdAsync(expenseId, It.IsAny<int>())).ReturnsAsync(expense);
 
             // Act
             ExpenseResponse result = await _service.GetByIdAsync(expenseId, 1);
@@ -54,11 +54,11 @@ namespace PersonalExpenses.UnitTests.Services
         {
             // Arrange
             int expenseId = 999;
-            _mockRepository.Setup(r => r.GetByIdAsync(expenseId, It.IsAny<int>()))
+            _ = _mockRepository.Setup(r => r.GetByIdAsync(expenseId, It.IsAny<int>()))
                 .ThrowsAsync(new KeyNotFoundException());
 
             // Act & Assert
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await _service.GetByIdAsync(expenseId, 1));
+            _ = await Assert.ThrowsAsync<KeyNotFoundException>(async () => await _service.GetByIdAsync(expenseId, 1));
             _mockRepository.Verify(r => r.GetByIdAsync(expenseId, It.IsAny<int>()), Times.Once);
         }
 
@@ -67,15 +67,15 @@ namespace PersonalExpenses.UnitTests.Services
         {
             // Arrange
             DateTime yesterday = DateTime.UtcNow.AddDays(-1);
-            List<Expense> expenses = new()
-            {
+            List<Expense> expenses =
+            [
                 new() { Id = 1, Title = "Lunch", Amount = 12.50m, Date = yesterday, Category = "Food" },
                 new() { Id = 2, Title = "Taxi", Amount = 8.75m, Date = yesterday.AddDays(-1), Category = "Transport" }
-            };
+            ];
 
             GetExpensesQueryParams queryParams = new() { Page = 1, PageSize = 20, Category = null };
 
-            _mockRepository.Setup(r => r.GetListAsync(1, 20, null, It.IsAny<int>()))
+            _ = _mockRepository.Setup(r => r.GetListAsync(1, 20, null, It.IsAny<int>()))
                 .ReturnsAsync((expenses, 2));
 
             // Act
@@ -95,15 +95,15 @@ namespace PersonalExpenses.UnitTests.Services
         {
             // Arrange
             DateTime yesterday = DateTime.UtcNow.AddDays(-1);
-            List<Expense> expenses = new()
-            {
+            List<Expense> expenses =
+            [
                 new() { Id = 1, Title = "Lunch", Amount = 12.50m, Date = yesterday, Category = "Food" },
                 new() { Id = 2, Title = "Dinner", Amount = 15m, Date = yesterday.AddDays(-1), Category = "Food" }
-            };
+            ];
 
             GetExpensesQueryParams queryParams = new() { Page = 1, PageSize = 20, Category = "Food" };
 
-            _mockRepository.Setup(r => r.GetListAsync(1, 20, "Food", It.IsAny<int>()))
+            _ = _mockRepository.Setup(r => r.GetListAsync(1, 20, "Food", It.IsAny<int>()))
                 .ReturnsAsync((expenses, 2));
 
             // Act
@@ -138,8 +138,8 @@ namespace PersonalExpenses.UnitTests.Services
                 Category = request.Category
             };
 
-            _mockRepository.Setup(r => r.AddAsync(It.IsAny<Expense>())).ReturnsAsync(createdExpense);
-            _mockRepository.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
+            _ = _mockRepository.Setup(r => r.AddAsync(It.IsAny<Expense>())).ReturnsAsync(createdExpense);
+            _ = _mockRepository.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
 
             // Act
             ExpenseResponse result = await _service.CreateAsync(request);
@@ -158,14 +158,14 @@ namespace PersonalExpenses.UnitTests.Services
             // Arrange
             CreateExpenseRequest request = new()
             {
-                Title = "", 
+                Title = "",
                 Amount = -10m,
                 Date = DateTime.UtcNow,
                 Category = ""
             };
 
             // Act & Assert
-            await Assert.ThrowsAsync<ValidationException>(async () => await _service.CreateAsync(request));
+            _ = await Assert.ThrowsAsync<ValidationException>(async () => await _service.CreateAsync(request));
         }
 
         [Fact]
@@ -200,9 +200,9 @@ namespace PersonalExpenses.UnitTests.Services
                 Category = request.Category
             };
 
-            _mockRepository.Setup(r => r.GetByIdAsync(expenseId, It.IsAny<int>())).ReturnsAsync(existingExpense);
-            _mockRepository.Setup(r => r.UpdateAsync(It.IsAny<Expense>())).ReturnsAsync(updatedExpense);
-            _mockRepository.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
+            _ = _mockRepository.Setup(r => r.GetByIdAsync(expenseId, It.IsAny<int>())).ReturnsAsync(existingExpense);
+            _ = _mockRepository.Setup(r => r.UpdateAsync(It.IsAny<Expense>())).ReturnsAsync(updatedExpense);
+            _ = _mockRepository.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
 
             // Act
             ExpenseResponse result = await _service.UpdateAsync(expenseId, request, 1);
@@ -231,11 +231,11 @@ namespace PersonalExpenses.UnitTests.Services
                 Category = "Food"
             };
 
-            _mockRepository.Setup(r => r.GetByIdAsync(expenseId, It.IsAny<int>()))
+            _ = _mockRepository.Setup(r => r.GetByIdAsync(expenseId, It.IsAny<int>()))
                 .ThrowsAsync(new KeyNotFoundException());
 
             // Act & Assert
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await _service.UpdateAsync(expenseId, request, 1));
+            _ = await Assert.ThrowsAsync<KeyNotFoundException>(async () => await _service.UpdateAsync(expenseId, request, 1));
         }
 
         [Fact]
@@ -252,9 +252,9 @@ namespace PersonalExpenses.UnitTests.Services
                 Category = "Food"
             };
 
-            _mockRepository.Setup(r => r.GetByIdAsync(expenseId, It.IsAny<int>())).ReturnsAsync(expense);
-            _mockRepository.Setup(r => r.DeleteAsync(expense)).ReturnsAsync(expense);
-            _mockRepository.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
+            _ = _mockRepository.Setup(r => r.GetByIdAsync(expenseId, It.IsAny<int>())).ReturnsAsync(expense);
+            _ = _mockRepository.Setup(r => r.DeleteAsync(expense)).ReturnsAsync(expense);
+            _ = _mockRepository.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
 
             // Act
             bool result = await _service.DeleteAsync(expenseId, 1);
@@ -271,7 +271,7 @@ namespace PersonalExpenses.UnitTests.Services
         {
             // Arrange
             int expenseId = 999;
-            _mockRepository.Setup(r => r.GetByIdAsync(expenseId, It.IsAny<int>()))
+            _ = _mockRepository.Setup(r => r.GetByIdAsync(expenseId, It.IsAny<int>()))
                 .ReturnsAsync((Expense?)null);
 
             // Act

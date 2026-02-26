@@ -8,7 +8,7 @@ namespace PersonalExpenses.Security.Services
     {
         public async Task<string> StoreRefreshTokenAsync(int userId, string refreshToken, DateTime expiresAt)
         {
-            var token = new RefreshToken
+            RefreshToken token = new()
             {
                 UserId = userId,
                 Token = refreshToken,
@@ -17,36 +17,26 @@ namespace PersonalExpenses.Security.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            await refreshTokenRepository.AddAsync(token);
+            _ = await refreshTokenRepository.AddAsync(token);
             await refreshTokenRepository.SaveChangesAsync();
             return refreshToken;
         }
 
         public async Task<bool> ValidateRefreshTokenAsync(int userId, string refreshToken)
         {
-            var token = await refreshTokenRepository.GetByTokenAsync(refreshToken);
+            RefreshToken? token = await refreshTokenRepository.GetByTokenAsync(refreshToken);
 
-            if (token == null)
-                return false;
-
-            if (token.UserId != userId)
-                return false;
-
-            if (token.IsRevoked)
-                return false;
-
-            if (token.ExpiresAt < DateTime.UtcNow)
-                return false;
-
-            return true;
+            return token != null && token.UserId == userId && !token.IsRevoked && token.ExpiresAt >= DateTime.UtcNow;
         }
 
         public async Task<bool> RevokeRefreshTokenAsync(int userId, string refreshToken)
         {
-            var token = await refreshTokenRepository.GetByTokenAsync(refreshToken);
+            RefreshToken? token = await refreshTokenRepository.GetByTokenAsync(refreshToken);
 
             if (token == null || token.UserId != userId)
+            {
                 return false;
+            }
 
             token.IsRevoked = true;
             await refreshTokenRepository.UpdateAsync(token);

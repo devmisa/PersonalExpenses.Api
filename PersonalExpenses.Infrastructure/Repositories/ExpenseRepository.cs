@@ -12,18 +12,18 @@ namespace PersonalExpenses.Infrastructure.Repositories
             return await GetExpenseByIdOrThrowAsync(id, userId);
         }
 
-        public async Task<(IList<Expense> Items, int TotalCount)> GetListAsync(int page, int pageSize, string? category, int userId)
+        public async Task<(IReadOnlyList<Expense> Items, int TotalCount)> GetListAsync(int page, int pageSize, string? category, int userId)
         {
-            var query = context.Set<Expense>().Where(e => e.UserId == userId).AsQueryable();
+            IQueryable<Expense> query = context.Set<Expense>().Where(e => e.UserId == userId).AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(category))
             {
                 query = query.Where(e => e.Category == category);
             }
 
-            var totalCount = await query.CountAsync();
+            int totalCount = await query.CountAsync();
 
-            var items = await query
+            IReadOnlyList<Expense> items = await query
                 .OrderByDescending(e => e.Date)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)

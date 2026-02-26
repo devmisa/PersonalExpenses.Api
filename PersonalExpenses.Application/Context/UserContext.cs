@@ -11,29 +11,13 @@ namespace PersonalExpenses.Application.Context
         {
             get
             {
-                var userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier);
-                if (int.TryParse(userIdClaim?.Value, out var userId))
-                {
-                    return userId;
-                }
-                return null;
+                Claim? userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier);
+                return int.TryParse(userIdClaim?.Value, out int userId) ? userId : null;
             }
         }
 
-        public string? Email
-        {
-            get
-            {
-                return _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Email)?.Value;
-            }
-        }
+        public string? Email => _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Email)?.Value;
 
-        public bool IsAuthenticated
-        {
-            get
-            {
-                return _httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated ?? false;
-            }
-        }
+        public bool IsAuthenticated => _httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated ?? false;
     }
 }

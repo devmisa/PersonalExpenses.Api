@@ -9,7 +9,7 @@ namespace PersonalExpenses.Security.Validators
 
         public (bool IsValid, List<string> Errors) ValidatePasswordStrength(string password)
         {
-            var errors = new List<string>();
+            List<string> errors = [];
 
             if (string.IsNullOrWhiteSpace(password))
             {

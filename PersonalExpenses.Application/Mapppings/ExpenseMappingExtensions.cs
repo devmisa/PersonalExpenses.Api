@@ -17,7 +17,7 @@ namespace PersonalExpenses.Application.Mapppings
             };
         }
 
-        public static IList<ExpenseResponse> ToResponseList(this IList<Expense> entities)
+        public static IReadOnlyList<ExpenseResponse> ToResponseList(this IReadOnlyList<Expense> entities)
         {
             return [.. entities.Select(e => e.ToResponse())];
         }

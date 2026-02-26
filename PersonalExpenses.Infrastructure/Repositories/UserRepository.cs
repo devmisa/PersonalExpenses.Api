@@ -19,13 +19,13 @@ namespace PersonalExpenses.Infrastructure.Repositories
 
         public async Task<User> AddAsync(User entity)
         {
-            await context.Set<User>().AddAsync(entity);
+            _ = await context.Set<User>().AddAsync(entity);
             return entity;
         }
 
         public async Task SaveChangesAsync()
         {
-            await context.SaveChangesAsync();
+            _ = await context.SaveChangesAsync();
         }
     }
 }

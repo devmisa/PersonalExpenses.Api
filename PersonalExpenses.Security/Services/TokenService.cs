@@ -13,10 +13,10 @@ namespace PersonalExpenses.Security.Services
     {
         public string GenerateToken(User user)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(settings.Secret);
+            JwtSecurityTokenHandler tokenHandler = new();
+            byte[] key = Encoding.ASCII.GetBytes(settings.Secret);
 
-            var tokenDescriptor = new SecurityTokenDescriptor
+            SecurityTokenDescriptor tokenDescriptor = new()
             {
                 Subject = new ClaimsIdentity(
                 [
@@ -32,23 +32,23 @@ namespace PersonalExpenses.Security.Services
                     SecurityAlgorithms.HmacSha256Signature)
             };
 
-            var token = tokenHandler.CreateToken(tokenDescriptor);
+            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
         }
 
         public string GenerateRefreshToken()
         {
-            var randomNumber = new byte[64];
-            using var rng = RandomNumberGenerator.Create();
+            byte[] randomNumber = new byte[64];
+            using RandomNumberGenerator rng = RandomNumberGenerator.Create();
             rng.GetBytes(randomNumber);
             return Convert.ToBase64String(randomNumber);
         }
 
         public (string AccessToken, string RefreshToken, int ExpiresIn) GenerateTokenPair(User user)
         {
-            var accessToken = GenerateToken(user);
-            var refreshToken = GenerateRefreshToken();
-            var expiresIn = settings.ExpiryInHours * 3600; 
+            string accessToken = GenerateToken(user);
+            string refreshToken = GenerateRefreshToken();
+            int expiresIn = settings.ExpiryInHours * 3600;
 
             return (accessToken, refreshToken, expiresIn);
         }

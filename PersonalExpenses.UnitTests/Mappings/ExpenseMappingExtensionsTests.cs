@@ -40,15 +40,15 @@ namespace PersonalExpenses.UnitTests.Mappings
         {
             // Arrange
             DateTime now = DateTime.UtcNow;
-            List<Expense> expenses = new()
-            {
+            List<Expense> expenses =
+            [
                 new() { Id = 1, Title = "Lunch", Amount = 12.50m, Date = now, Category = "Food" },
                 new() { Id = 2, Title = "Taxi", Amount = 8.75m, Date = now.AddDays(-1), Category = "Transport" },
                 new() { Id = 3, Title = "Gas", Amount = 50m, Date = now.AddDays(-2), Category = "Transport" }
-            };
+            ];
 
             // Act
-            IList<ExpenseResponse> responses = expenses.ToResponseList();
+            IReadOnlyList<ExpenseResponse> responses = expenses.ToResponseList();
 
             // Assert
             Assert.NotNull(responses);
@@ -62,10 +62,10 @@ namespace PersonalExpenses.UnitTests.Mappings
         public void ToResponseList_WithEmptyList_ReturnsEmptyList()
         {
             // Arrange
-            List<Expense> expenses = new();
+            List<Expense> expenses = [];
 
             // Act
-            IList<ExpenseResponse> responses = expenses.ToResponseList();
+            IReadOnlyList<ExpenseResponse> responses = expenses.ToResponseList();
 
             // Assert
             Assert.NotNull(responses);
@@ -94,7 +94,7 @@ namespace PersonalExpenses.UnitTests.Mappings
             Assert.Equal(request.Amount, entity.Amount);
             Assert.Equal(request.Date, entity.Date);
             Assert.Equal(request.Category, entity.Category);
-            Assert.Equal(0, entity.Id); 
+            Assert.Equal(0, entity.Id);
         }
 
         [Fact]

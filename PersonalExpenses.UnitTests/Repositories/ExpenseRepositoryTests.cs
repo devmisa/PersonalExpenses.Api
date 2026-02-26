@@ -80,13 +80,13 @@ namespace PersonalExpenses.UnitTests.Repositories
             };
 
             Mock<DbSet<Expense>> mockSet = new();
-            var mockContext = new Mock<AppDbContext>(new DbContextOptions<AppDbContext>());
+            Mock<AppDbContext> mockContext = new(new DbContextOptions<AppDbContext>());
             _ = mockContext.Setup(m => m.Set<Expense>()).Returns(mockSet.Object);
 
             ExpenseRepository repository = new(mockContext.Object);
 
             // Act
-            var result = await repository.AddAsync(expense);
+            Expense result = await repository.AddAsync(expense);
 
             // Assert
             Assert.NotNull(result);
@@ -113,21 +113,21 @@ namespace PersonalExpenses.UnitTests.Repositories
 
             Mock<DbSet<Expense>> mockSet = GetMockDbSet(new List<Expense> { existingExpense }.AsQueryable());
 
-            var mockContext = new Mock<AppDbContext>(new DbContextOptions<AppDbContext>());
+            Mock<AppDbContext> mockContext = new(new DbContextOptions<AppDbContext>());
             _ = mockContext.Setup(m => m.Set<Expense>()).Returns(mockSet.Object);
 
             ExpenseRepository repository = new(mockContext.Object);
 
             // Act
-            var result = await repository.DeleteAsync(existingExpense);
+            Expense result = await repository.DeleteAsync(existingExpense);
 
             // Assert
             Assert.NotNull(result);
             Assert.Equal(existingExpense.Id, result.Id);
             mockSet.Verify(m => m.Remove(existingExpense), Times.Once);
         }
-                [Fact]
-                public async Task SaveChangesAsync_CallsContextSaveChangesOnce()
+        [Fact]
+        public async Task SaveChangesAsync_CallsContextSaveChangesOnce()
         {
             // Arrange
             Mock<AppDbContext> mockContext = new(
@@ -152,15 +152,15 @@ namespace PersonalExpenses.UnitTests.Repositories
 
         private static Mock<DbSet<T>> GetMockDbSet<T>(IQueryable<T> source) where T : class
         {
-            var mock = new Mock<DbSet<T>>();
-            mock.As<IAsyncEnumerable<T>>()
+            Mock<DbSet<T>> mock = new();
+            _ = mock.As<IAsyncEnumerable<T>>()
                 .Setup(m => m.GetAsyncEnumerator(It.IsAny<CancellationToken>()))
                 .Returns(new AsyncEnumerator<T>(source.GetEnumerator()));
-            mock.As<IQueryable<T>>().Setup(m => m.Provider)
+            _ = mock.As<IQueryable<T>>().Setup(m => m.Provider)
                 .Returns(new TestAsyncQueryProvider<T>(source.Provider));
-            mock.As<IQueryable<T>>().Setup(m => m.Expression).Returns(source.Expression);
-            mock.As<IQueryable<T>>().Setup(m => m.ElementType).Returns(source.ElementType);
-            mock.As<IQueryable<T>>().Setup(m => m.GetEnumerator()).Returns(source.GetEnumerator());
+            _ = mock.As<IQueryable<T>>().Setup(m => m.Expression).Returns(source.Expression);
+            _ = mock.As<IQueryable<T>>().Setup(m => m.ElementType).Returns(source.ElementType);
+            _ = mock.As<IQueryable<T>>().Setup(m => m.GetEnumerator()).Returns(source.GetEnumerator());
             return mock;
         }
     }
@@ -170,20 +170,30 @@ namespace PersonalExpenses.UnitTests.Repositories
         private static readonly MethodInfo _fromResultMethod =
             typeof(Task).GetMethod(nameof(Task.FromResult))!;
 
-        public IQueryable CreateQuery(Expression expression) =>
-            new TestAsyncEnumerable<TEntity>(expression);
+        public IQueryable CreateQuery(Expression expression)
+        {
+            return new TestAsyncEnumerable<TEntity>(expression);
+        }
 
-        public IQueryable<TElement> CreateQuery<TElement>(Expression expression) =>
-            new TestAsyncEnumerable<TElement>(expression);
+        public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
+        {
+            return new TestAsyncEnumerable<TElement>(expression);
+        }
 
-        public object? Execute(Expression expression) => inner.Execute(expression);
+        public object? Execute(Expression expression)
+        {
+            return inner.Execute(expression);
+        }
 
-        public TResult Execute<TResult>(Expression expression) => inner.Execute<TResult>(expression);
+        public TResult Execute<TResult>(Expression expression)
+        {
+            return inner.Execute<TResult>(expression);
+        }
 
         public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
         {
-            var resultType = typeof(TResult).GetGenericArguments()[0];
-            var result = inner.Execute(expression);
+            Type resultType = typeof(TResult).GetGenericArguments()[0];
+            object? result = inner.Execute(expression);
             return (TResult)_fromResultMethod.MakeGenericMethod(resultType).Invoke(null, [result])!;
         }
     }
@@ -195,8 +205,10 @@ namespace PersonalExpenses.UnitTests.Repositories
 
         IQueryProvider IQueryable.Provider => new TestAsyncQueryProvider<T>(this);
 
-        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken token = default) =>
-            new AsyncEnumerator<T>(this.AsEnumerable().GetEnumerator());
+        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken token = default)
+        {
+            return new AsyncEnumerator<T>(this.AsEnumerable().GetEnumerator());
+        }
     }
 
     public class AsyncEnumerator<T>(IEnumerator<T> enumerator) : IAsyncEnumerator<T>

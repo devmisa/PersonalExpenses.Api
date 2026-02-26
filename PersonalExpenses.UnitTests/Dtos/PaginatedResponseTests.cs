@@ -200,11 +200,11 @@ namespace PersonalExpenses.UnitTests.Dtos
         public void PopulateData_WithExpenses_StoresCorrectly()
         {
             // Arrange
-            List<ExpenseResponse> expenses = new()
-            {
+            List<ExpenseResponse> expenses =
+            [
                 new() { Id = 1, Title = "Lunch", Amount = 12.50m, Category = "Food" },
                 new() { Id = 2, Title = "Taxi", Amount = 8.75m, Category = "Transport" }
-            };
+            ];
 
             PaginatedResponse<ExpenseResponse> response = new()
             {

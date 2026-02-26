@@ -9,12 +9,18 @@ namespace PersonalExpenses.Application.Dtos
         public void Validate()
         {
             if (Page < 1)
+            {
                 Page = 1;
+            }
 
             if (PageSize < 1)
+            {
                 PageSize = 20;
+            }
             else if (PageSize > 100)
+            {
                 PageSize = 100;
+            }
         }
     }
 }

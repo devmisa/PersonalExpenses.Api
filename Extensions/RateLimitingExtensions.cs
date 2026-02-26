@@ -7,16 +7,16 @@ namespace PersonalExpenses.Api.Extensions
     {
         public static IServiceCollection AddRateLimiting(this IServiceCollection services)
         {
-            services.AddRateLimiter(options =>
+            _ = services.AddRateLimiter(options =>
             {
-                options.AddFixedWindowLimiter("login", limiterOptions =>
+                _ = options.AddFixedWindowLimiter("login", limiterOptions =>
                 {
                     limiterOptions.PermitLimit = 5;
                     limiterOptions.Window = TimeSpan.FromMinutes(15);
                     limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                 });
 
-                options.AddFixedWindowLimiter("general", limiterOptions =>
+                _ = options.AddFixedWindowLimiter("general", limiterOptions =>
                 {
                     limiterOptions.PermitLimit = 100;
                     limiterOptions.Window = TimeSpan.FromMinutes(1);

@@ -22,7 +22,7 @@ namespace PersonalExpenses.Application.Services
         {
             queryParams.Validate();
 
-            var (items, totalCount) = await expenseRepository.GetListAsync(queryParams.Page, queryParams.PageSize, queryParams.Category, userId);
+            (IReadOnlyList<Expense>? items, int totalCount) = await expenseRepository.GetListAsync(queryParams.Page, queryParams.PageSize, queryParams.Category, userId);
 
             return new PaginatedResponse<ExpenseResponse>
             {
@@ -39,11 +39,13 @@ namespace PersonalExpenses.Application.Services
             ValidationResult validationResult = await validator.ValidateAsync(request);
 
             if (!validationResult.IsValid)
+            {
                 throw new ValidationException(validationResult.Errors);
+            }
 
             Expense entity = request.ToEntity();
 
-            var createdEntity = await expenseRepository.AddAsync(entity);
+            Expense createdEntity = await expenseRepository.AddAsync(entity);
             await expenseRepository.SaveChangesAsync();
 
             return createdEntity.ToResponse();
@@ -56,15 +58,17 @@ namespace PersonalExpenses.Application.Services
             ValidationResult validationResult = await validator.ValidateAsync(request);
 
             if (!validationResult.IsValid)
+            {
                 throw new ValidationException(validationResult.Errors);
+            }
 
             Expense entity = await expenseRepository.GetByIdAsync(id, userId) ?? throw new KeyNotFoundException($"Expense with id {id} not found.");
             request.UpdateEntity(entity);
 
-            var updatedEntity = await expenseRepository.UpdateAsync(entity);  
+            Expense updatedEntity = await expenseRepository.UpdateAsync(entity);
             await expenseRepository.SaveChangesAsync();
 
-            return updatedEntity.ToResponse();  
+            return updatedEntity.ToResponse();
         }
 
         public async Task<bool> DeleteAsync(int id, int userId)
@@ -72,9 +76,11 @@ namespace PersonalExpenses.Application.Services
             Expense entity = await expenseRepository.GetByIdAsync(id, userId);
 
             if (entity == null)
+            {
                 return false;
+            }
 
-            await expenseRepository.DeleteAsync(entity);
+            _ = await expenseRepository.DeleteAsync(entity);
             await expenseRepository.SaveChangesAsync();
 
             return true;

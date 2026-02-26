@@ -10,19 +10,19 @@ namespace PersonalExpenses.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
+            _ = migrationBuilder.AddColumn<int>(
                 name: "UserId",
                 table: "Expenses",
                 type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
-            migrationBuilder.CreateIndex(
+            _ = migrationBuilder.CreateIndex(
                 name: "IX_Expenses_UserId",
                 table: "Expenses",
                 column: "UserId");
 
-            migrationBuilder.AddForeignKey(
+            _ = migrationBuilder.AddForeignKey(
                 name: "FK_Expenses_Users_UserId",
                 table: "Expenses",
                 column: "UserId",
@@ -34,15 +34,15 @@ namespace PersonalExpenses.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
+            _ = migrationBuilder.DropForeignKey(
                 name: "FK_Expenses_Users_UserId",
                 table: "Expenses");
 
-            migrationBuilder.DropIndex(
+            _ = migrationBuilder.DropIndex(
                 name: "IX_Expenses_UserId",
                 table: "Expenses");
 
-            migrationBuilder.DropColumn(
+            _ = migrationBuilder.DropColumn(
                 name: "UserId",
                 table: "Expenses");
         }

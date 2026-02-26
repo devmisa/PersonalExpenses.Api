@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using PersonalExpenses.Api.Services;
 using System.Net;
 
@@ -21,8 +22,8 @@ namespace PersonalExpenses.Api.Middlewares
         private static Task HandleExceptionAsync(HttpContext context, Exception exception, ExceptionToProblemDetailsService exceptionService)
         {
             context.Response.ContentType = "application/json";
-            
-            var problemDetails = exceptionService.MapExceptionToProblemDetails(exception, context);
+
+            ProblemDetails problemDetails = exceptionService.MapExceptionToProblemDetails(exception, context);
             context.Response.StatusCode = problemDetails.Status ?? (int)HttpStatusCode.InternalServerError;
 
             return context.Response.WriteAsJsonAsync(problemDetails);

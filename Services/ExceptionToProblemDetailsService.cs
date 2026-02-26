@@ -28,7 +28,7 @@ namespace PersonalExpenses.Api.Services
         {
             _logger.LogWarning("Validation failed: {Errors}", string.Join(", ", exception.Errors.Select(e => e.ErrorMessage)));
 
-            var problemDetails = new ProblemDetails
+            ProblemDetails problemDetails = new()
             {
                 Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
                 Title = "One or more validation errors occurred.",
@@ -37,7 +37,7 @@ namespace PersonalExpenses.Api.Services
                 Instance = null
             };
 
-            var errors = exception.Errors
+            Dictionary<string, string[]> errors = exception.Errors
                 .GroupBy(e => e.PropertyName)
                 .ToDictionary(
                     g => g.Key,

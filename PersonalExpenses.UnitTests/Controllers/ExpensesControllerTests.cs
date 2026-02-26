@@ -16,8 +16,8 @@ namespace PersonalExpenses.UnitTests.Controllers
     {
         private static ExpensesController CreateController(Mock<IExpenseService> mockService, int userId = 1)
         {
-            var controller = new ExpensesController(mockService.Object);
-            var user = new ClaimsPrincipal(new ClaimsIdentity(
+            ExpensesController controller = new(mockService.Object);
+            ClaimsPrincipal user = new(new ClaimsIdentity(
                 [new Claim(ClaimTypes.NameIdentifier, userId.ToString())], "TestAuth"));
             controller.ControllerContext = new ControllerContext
             {

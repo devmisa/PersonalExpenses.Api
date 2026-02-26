@@ -19,7 +19,7 @@ namespace PersonalExpenses.Infrastructure.DesignTime
             string? connectionString = configuration.GetConnectionString("DefaultConnection");
 
             DbContextOptionsBuilder<AppDbContext> optionsBuilder = new();
-            optionsBuilder.ConfigureSqliteOptions(connectionString);
+            _ = optionsBuilder.ConfigureSqliteOptions(connectionString);
 
             return new AppDbContext(optionsBuilder.Options);
         }

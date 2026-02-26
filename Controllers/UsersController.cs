@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using PersonalExpenses.Application.Context;
 using PersonalExpenses.Application.Dtos;
 using PersonalExpenses.Application.Interfaces;
+using PersonalExpenses.Domain.Entities;
 using PersonalExpenses.Domain.Interfaces;
 using PersonalExpenses.Security.Interfaces;
 
@@ -12,7 +13,7 @@ namespace PersonalExpenses.Api.Controllers
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController(
-        IUserService userService, 
+        IUserService userService,
         ITokenService tokenService,
         IRefreshTokenService refreshTokenService,
         IUserContext userContext,
@@ -30,7 +31,7 @@ namespace PersonalExpenses.Api.Controllers
         [EnableRateLimiting("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var response = await userService.LoginAsync(request);
+            LoginResponse response = await userService.LoginAsync(request);
             return Ok(response);
         }
 
@@ -42,16 +43,16 @@ namespace PersonalExpenses.Api.Controllers
             if (!userContext.IsAuthenticated || !userContext.UserId.HasValue)
                 return Unauthorized(new { Message = "Usuário não autenticado" });
 
-            var isValid = await refreshTokenService.ValidateRefreshTokenAsync(userContext.UserId.Value, request.RefreshToken);
+            bool isValid = await refreshTokenService.ValidateRefreshTokenAsync(userContext.UserId.Value, request.RefreshToken);
             if (!isValid)
                 return Unauthorized(new { Message = "Token de refresh inválido ou expirado" });
 
-            var user = await userRepository.GetByIdAsync(userContext.UserId.Value);
+            User? user = await userRepository.GetByIdAsync(userContext.UserId.Value);
             if (user == null)
                 return Unauthorized(new { Message = "Usuário não encontrado" });
 
-            var (newAccessToken, newRefreshToken, expiresIn) = tokenService.GenerateTokenPair(user);
-            await refreshTokenService.StoreRefreshTokenAsync(user.Id, newRefreshToken, DateTime.UtcNow.AddHours(24));
+            (string? newAccessToken, string? newRefreshToken, int expiresIn) = tokenService.GenerateTokenPair(user);
+            _ = await refreshTokenService.StoreRefreshTokenAsync(user.Id, newRefreshToken, DateTime.UtcNow.AddHours(24));
 
             return Ok(new { Token = newAccessToken, RefreshToken = newRefreshToken, ExpiresIn = expiresIn });
         }

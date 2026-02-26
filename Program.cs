@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using PersonalExpenses.Api.Middlewares;
 using PersonalExpenses.Api.Services;
 using PersonalExpenses.Application.Context;
@@ -12,6 +12,7 @@ using PersonalExpenses.Application.Dtos;
 using PersonalExpenses.Application.Interfaces;
 using PersonalExpenses.Application.Services;
 using PersonalExpenses.Application.Validations;
+using PersonalExpenses.Domain.Interfaces;
 using PersonalExpenses.Infrastructure.Data;
 using PersonalExpenses.Infrastructure.Extensions;
 using PersonalExpenses.Infrastructure.Interfaces;
@@ -22,11 +23,10 @@ using PersonalExpenses.Security.Services;
 using PersonalExpenses.Security.Settings;
 using System.Text;
 using System.Threading.RateLimiting;
-using PersonalExpenses.Domain.Interfaces;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+JwtSettings? jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
 
 string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var builderConnection = new SqliteConnectionStringBuilder(connectionString);
@@ -62,7 +62,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy
+        _ = policy
             .WithOrigins("http://localhost:3000", "https://localhost:3000") // Frontend URLs //TODO: editar
             .AllowAnyMethod()
             .AllowAnyHeader()
@@ -73,14 +73,14 @@ builder.Services.AddCors(options =>
 //Configurar Rate Limiting
 builder.Services.AddRateLimiter(options =>
 {
-    options.AddFixedWindowLimiter("login", limiterOptions =>
+    _ = options.AddFixedWindowLimiter("login", limiterOptions =>
     {
         limiterOptions.PermitLimit = 5;
         limiterOptions.Window = TimeSpan.FromMinutes(15);
         limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
     });
 
-    options.AddFixedWindowLimiter("general", limiterOptions =>
+    _ = options.AddFixedWindowLimiter("general", limiterOptions =>
     {
         limiterOptions.PermitLimit = 100;
         limiterOptions.Window = TimeSpan.FromMinutes(1);
@@ -90,11 +90,13 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
-builder.Services.AddAuthentication(x => {
+builder.Services.AddAuthentication(x =>
+{
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-.AddJwtBearer(x => {
+.AddJwtBearer(x =>
+{
     x.RequireHttpsMetadata = true;
     x.SaveToken = true;
     x.TokenValidationParameters = new TokenValidationParameters
@@ -106,7 +108,7 @@ builder.Services.AddAuthentication(x => {
         ValidateAudience = true,
         ValidAudience = jwtSettings.Audience
     };
-}); 
+});
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen(options =>
@@ -159,7 +161,7 @@ app.UseHttpsRedirection();
 app.UseRateLimiter();
 app.UseCors("AllowFrontend");
 
-app.UseAuthentication();  
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
