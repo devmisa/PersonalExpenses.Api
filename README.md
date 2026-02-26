@@ -12,7 +12,10 @@
 - ✅ Documentação via Swagger
 - ✅ Injeção de Dependência configurada
 - ✅ Padrão de camadas implementado
-
+- ✅ JWT
+- ✅ Criptografia de Senhas
+- ✅ Automação do contexto do usuário 
+- ✅ FluentValidation
 --------------------------------------------------
 
 # Personal Expense Management Application
@@ -29,3 +32,8 @@
 - ✅ Swagger Documentation
 - ✅ Configured Dependency Injection
 - ✅ Layered architecture pattern implemented
+- ✅ JWT
+- ✅ Password Encryption
+- ✅ User Context Automation
+- ✅ FluentValidation
+
