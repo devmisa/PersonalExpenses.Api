@@ -9,7 +9,6 @@ namespace PersonalExpenses.Api.Extensions
         {
             services.AddRateLimiter(options =>
             {
-                // ✅ Rate Limit para Login: 5 tentativas por 15 minutos
                 options.AddFixedWindowLimiter("login", limiterOptions =>
                 {
                     limiterOptions.PermitLimit = 5;
@@ -17,7 +16,6 @@ namespace PersonalExpenses.Api.Extensions
                     limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                 });
 
-                // ✅ Rate Limit para API geral: 100 requisições por minuto
                 options.AddFixedWindowLimiter("general", limiterOptions =>
                 {
                     limiterOptions.PermitLimit = 100;
